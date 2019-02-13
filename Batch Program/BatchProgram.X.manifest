@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity name="BatchProgram" version="1.0.0.0"></assemblyIdentity>
+  <clrClass clsid="{9326db0c-2b3b-4169-a489-a66e31a9bdd5}" progid="BatchProgram.StandardAddInServer" threadingModel="Both" name="BatchProgram.BatchProgram.StandardAddInServer" runtimeVersion=""></clrClass>
+  <file name="BatchProgram.dll" hashalg="SHA1"></file>
+</assembly>
