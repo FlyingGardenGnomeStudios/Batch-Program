@@ -1,6 +1,8 @@
 Imports Inventor
 Imports System.Runtime.InteropServices
 Imports Microsoft.Win32
+Imports Update
+Imports System.Reflection
 
 Namespace BatchProgram
     <ProgIdAttribute("BatchProgram.StandardAddInServer"), _
@@ -16,12 +18,12 @@ Namespace BatchProgram
 
         ' Declaration of the object for the UserInterfaceEvents to be able to handle
         ' if the user resets the ribbon so the button can be added back in.
-        Private WithEvents m_uiEvents As UserInterfaceEvents
+        Private WithEvents M_uiEvents As UserInterfaceEvents
 
         ' Declaration of the button definition with events to handle the click event.
         ' For additional commands this declaration along with other sections of code
         ' that apply to the button can be duplicated from this example.
-        Private WithEvents m_sampleButton As ButtonDefinition
+        Private WithEvents BatchProgramButton As ButtonDefinition
 
 
 #Region "ApplicationAddInServer Members"
@@ -30,12 +32,28 @@ Namespace BatchProgram
         ' to the Inventor Application object. The FirstTime flag indicates if the AddIn is loaded for
         ' the first time. However, with the introduction of the ribbon this argument is always true.
         Public Sub Activate(ByVal addInSiteObject As Inventor.ApplicationAddInSite, ByVal firstTime As Boolean) Implements Inventor.ApplicationAddInServer.Activate
+            Dim CheckForUpdate As New CheckForUpdate
+            Dim Current As String = Nothing
+            Dim DLLLocation As String = Nothing
+            Dim Assemblies = AppDomain.CurrentDomain.GetAssemblies
+
+
+            For Each Refassembly As AssemblyName In Assembly.GetExecutingAssembly.GetReferencedAssemblies
+                If Refassembly.Name.Contains("BPAssembly") Then
+                    Current = Refassembly.Version.ToString
+                    DLLLocation = Assembly.GetExecutingAssembly.Location
+                    Exit For
+                End If
+            Next
+            Current = CInt(Current.Replace(".", "").Substring(0, 4))
+            Dim Newest As String = Nothing
+            CheckForUpdate.Check(Newest, Current, DLLLocation)
             Try
                 ' Initialize AddIn members.
                 g_inventorApplication = addInSiteObject.Application
 
                 ' Connect to the user-interface events to handle a ribbon reset.
-                m_uiEvents = g_inventorApplication.UserInterfaceManager.UserInterfaceEvents
+                M_uiEvents = g_inventorApplication.UserInterfaceManager.UserInterfaceEvents
 
                 '*********************************************************************************
                 '* The remaining code in this Sub is all for adding the add-in into Inventor's UI.
@@ -44,7 +62,7 @@ Namespace BatchProgram
                 '*********************************************************************************
 
                 ' Create the button definition using the CreateButtonDefinition function to simplify this step.
-                m_sampleButton = Utilities.CreateButtonDefinition("Command" & vbCr & "Name", "niftyCommandID", "", "ButtonResources\SampleButton")
+                BatchProgramButton = Utilities.CreateButtonDefinition("Run", "BatchProgramID", "", "ButtonResources\SampleButton")
 
                 ' Add to the user interface, if it's the first time.
                 ' If this add-in doesn't have a UI but runs in the background listening
@@ -61,8 +79,8 @@ Namespace BatchProgram
         ' unloaded either manually by the user or when the Inventor session is terminated.
         Public Sub Deactivate() Implements Inventor.ApplicationAddInServer.Deactivate
             ' Release objects.
-            m_sampleButton = Nothing
-            m_uiEvents = Nothing
+            BatchProgramButton = Nothing
+            M_uiEvents = Nothing
             g_inventorApplication = Nothing
 
             System.GC.Collect()
@@ -95,37 +113,55 @@ Namespace BatchProgram
             ' the Part ribbon. You'll need to change this to create the UI that your add-in needs.
 
             ' Get the part ribbon.
-            Dim partRibbon As Ribbon = g_inventorApplication.UserInterfaceManager.Ribbons.Item("Part")
-
+            Dim PartRibbon As Ribbon = g_inventorApplication.UserInterfaceManager.Ribbons.Item("Part")
+            Dim AssyRibbon As Ribbon = g_inventorApplication.UserInterfaceManager.Ribbons.Item("Assembly")
+            Dim DrawRibbon As Ribbon = g_inventorApplication.UserInterfaceManager.Ribbons.Item("Drawing")
             ' Get the "Tools" tab.
-            Dim toolsTab As RibbonTab = partRibbon.RibbonTabs.Item("id_TabTools")
+            Dim ToolsTab As RibbonTab = PartRibbon.RibbonTabs.Item("id_TabTools")
+            Dim AssyTab As RibbonTab = AssyRibbon.RibbonTabs.Item("id_TabTools")
+            Dim DrawTab As RibbonTab = DrawRibbon.RibbonTabs.Item("id_TabTools")
 
             ' Check to see if the "MySample" panel already exists and create it if it doesn't.
-            Dim customPanel As RibbonPanel = Nothing
+            Dim PartPanel As RibbonPanel = Nothing
+            Dim AssyPanel As RibbonPanel = Nothing
+            Dim DrawPanel As RibbonPanel = Nothing
             Try
-                customPanel = toolsTab.RibbonPanels.Item("MySample")
+                PartPanel = ToolsTab.RibbonPanels.Item("BatchProgram")
+                AssyPanel = AssyTab.RibbonPanels.Item("BatchProgram")
+                DrawPanel = DrawTab.RibbonPanels.Item("BatchProgram")
             Catch ex As Exception
             End Try
 
-            If customPanel Is Nothing Then
+            If PartPanel Is Nothing Then
                 ' Create a new panel.
-                customPanel = toolsTab.RibbonPanels.Add("Sample", "MySample", g_addInClientID)
+                PartPanel = ToolsTab.RibbonPanels.Add("Batch Program", "BatchProgram", g_addInClientID)
+            End If
+            If AssyPanel Is Nothing Then
+                ' Create a new panel.
+                AssyPanel = AssyTab.RibbonPanels.Add("Batch Program", "BatchProgram", g_addInClientID)
+            End If
+            If DrawPanel Is Nothing Then
+                ' Create a new panel.
+                DrawPanel = DrawTab.RibbonPanels.Add("Batch Program", "BatchProgram", g_addInClientID)
             End If
 
             ' Add a button.
-            If Not m_sampleButton Is Nothing Then
-                customPanel.CommandControls.AddButton(m_sampleButton, True)
+            If Not BatchProgramButton Is Nothing Then
+                PartPanel.CommandControls.AddButton(BatchProgramButton, True)
+                AssyPanel.CommandControls.AddButton(BatchProgramButton, True)
+                DrawPanel.CommandControls.AddButton(BatchProgramButton, True)
             End If
         End Sub
 
-        Private Sub m_uiEvents_OnResetRibbonInterface(Context As NameValueMap) Handles m_uiEvents.OnResetRibbonInterface
+        Private Sub M_uiEvents_OnResetRibbonInterface(Context As NameValueMap) Handles M_uiEvents.OnResetRibbonInterface
             ' The ribbon was reset, so add back the add-ins user-interface.
             AddToUserInterface()
         End Sub
 
         ' Sample handler for the button.
-        Private Sub m_sampleButton_OnExecute(Context As NameValueMap) Handles m_sampleButton.OnExecute
-            CommandFunctions.SampleCommandFunction()
+        Private Sub BatchProgramButton_OnExecute(Context As NameValueMap) Handles BatchProgramButton.OnExecute
+            Dim BPForm As New Main
+            BPForm.ShowDialog()
         End Sub
 #End Region
 

@@ -81,11 +81,17 @@
       <HintPath>C:\Program Files\Autodesk\Inventor 2018\Bin\Public Assemblies\Autodesk.Inventor.Interop.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="BPAssembly">
+      <HintPath>..\..\Inventor-Batch-Program\Batch_Program\bin\Debug\BPAssembly.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="Update">
+      <HintPath>..\..\Update\Update\bin\Debug\Update.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -103,14 +109,12 @@
     <None Include="BatchProgram.X.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Autodesk.BatchProgram.Inventor.addin" />
+    <None Include="Autodesk.Batch Program.Inventor.addin" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ButtonResources\SampleButton\32x32.png" />
     <None Include="ButtonResources\SampleButton\16x16.png" />
+    <None Include="ButtonResources\SampleButton\32x32.png" />
+    <None Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="My Project\" />
